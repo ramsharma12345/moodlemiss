@@ -60,7 +60,7 @@ class primary implements renderable, templatable {
         $mobileprimarynav = array_merge($this->get_primary_nav(), $this->get_custom_menu($output));
 
         $languagemenu = new \core\output\language_menu($this->page);
-        // pr($this->get_primary_nav()); die;
+
         return [
             'mobileprimarynav' => $mobileprimarynav,
             'moremenu' => $moremenu->export_for_template($output),
@@ -99,64 +99,48 @@ class primary implements renderable, templatable {
      */
     protected function get_custom_menu(renderer_base $output): array {
         global $CFG;
+ 
+        // $CFG->custommenuitems = "Manage Course | /course/management.php";
+
+        global $COURSE, $DB, $USER;
+        $coursecontext = \context_course::instance($COURSE->id);
+        $systemcontext = \context_system::instance();
+         
+        if (isloggedin()) {
+            if (has_capability('moodle/course:create', $coursecontext)) {
+                $strlang1 = get_string('managecourses');
+                $stringURL1 = $CFG->wwwroot.'/course/management.php';
+                $CFG->custommenuitems = "$strlang1 | $stringURL1"; 
+            }
+
+            $strlang2 = get_string('userlist', 'admin');
+            $stringURL2 = $CFG->wwwroot.'/admin/user.php';
+            $CFG->custommenuitems .= "
+            $strlang2 | $stringURL2"; 
+
+
+            if (has_capability('moodle/role:manage', $coursecontext) || has_capability('moodle/role:manage', $systemcontext)) {
+                
+                $strlang2 = get_string('userbulk', 'admin');
+                $stringURL2 = $CFG->wwwroot.'/admin/user/user_bulk.php';
+                $CFG->custommenuitems .= "
+                $strlang2 | $stringURL2";  
+            }
+
+
+            $strlang2 = get_string('gradereport', 'grades');
+            $stringURL2 = $CFG->wwwroot.'/grade/report/overview/index.php';
+            $CFG->custommenuitems .= "
+            $strlang2 | $stringURL2"; 
+
+
+        }
+
+
 
         // Early return if a custom menu does not exists.
         if (empty($CFG->custommenuitems)) {
-            // return [];
-        }
-        $CFG->custommenuitems = 'ab test | test.php';
-          $CFG->custommenuitems .='
-          ab test 3 | test3.php';
-
-        global $COURSE, $DB, $USER;
-        $systemcontext = \context_system::instance();
-        //only course creator role
-        $showmenu = false;
-        if (is_siteadmin()) {
-            $showmenu = true;
-        }
-        $getroleid = $DB->get_records_sql("Select id from {role} where shortname = 'coursecreator' or shortname = 'uncoursecreator' or shortname = 'uncategorymanager'");
-        if ($getroleid) {
-            foreach ($getroleid as $indroleid) {
-                $checkroleassignment = $DB->get_record_sql("Select id from {role_assignments} where roleid = $indroleid->id and userid = $USER->id");
-                if (!empty($checkroleassignment)) {
-                    $showmenu = true;
-                }
-            }
-        }
-
-        $coursecontext = \context_course::instance($COURSE->id);
-        if (has_capability('moodle/course:create', $coursecontext) || $showmenu) {
-            $strlang1 = get_string('managecourses');
-            $url_course =  $CFG->wwwroot.'/course/management.php';
-            $CFG->custommenuitems .= "
-            $strlang1 | $url_course";
-        }
-
-
-        if (has_capability('moodle/role:manage', $coursecontext) || has_capability('moodle/role:manage', $systemcontext) || $showmenu) {
-            
-            // Browse user list
-            $strlang1 = get_string('userlist', 'admin');
-            $url_course =   $CFG->wwwroot.'/admin/user.php';
-            $CFG->custommenuitems .= "
-            $strlang1 | $url_course";
-
-            // $branch->add(get_string('userlist', 'admin'), new moodle_url('/admin/user.php'), get_string('userlist', 'admin'), 10002);
-
-            // if (has_capability('moodle/role:manage', $coursecontext) || has_capability('moodle/role:manage', $systemcontext)) {
-            //     // Bulk user actions
-            //     $branch->add(get_string('userbulk', 'admin'), new moodle_url('/admin/user/user_bulk.php'), get_string('userbulk', 'admin'), 10002);
-            // }
-            
-            // // Add a new user
-            // $branch->add(get_string('addnewuser'), new moodle_url('/user/editadvanced.php?id=-1'); , get_string('addnewuser'), 10002);
-
-            // if (has_capability('moodle/role:manage', $coursecontext) || has_capability('moodle/role:manage', $systemcontext)) {
-            //     // Cohorts
-            //     $branch->add(get_string('cohorts', 'cohort'), new moodle_url('/cohort/index.php'), get_string('cohorts', 'cohort'), 10002);
-            // } 
-        
+            return [];
         }
 
         $custommenuitems = $CFG->custommenuitems;
