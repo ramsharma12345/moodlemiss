@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-// \lib\classes\navigation\output\priamry.php
+
 namespace core\navigation\output;
 
 use renderable;
@@ -98,14 +98,11 @@ class primary implements renderable, templatable {
      * @return array
      */
     protected function get_custom_menu(renderer_base $output): array {
-        global $CFG;
- 
-        // $CFG->custommenuitems = "Manage Course | /course/management.php";
-
-        global $COURSE, $DB, $USER;
+        global $COURSE, $DB, $USER, $CFG;
         $coursecontext = \context_course::instance($COURSE->id);
         $systemcontext = \context_system::instance();
-         
+
+
         if (isloggedin()) {
             if (has_capability('moodle/course:create', $coursecontext)) {
                 $strlang1 = get_string('managecourses');
@@ -123,8 +120,21 @@ class primary implements renderable, templatable {
                 
                 $strlang2 = get_string('userbulk', 'admin');
                 $stringURL2 = $CFG->wwwroot.'/admin/user/user_bulk.php';
+
+
+                $strlang22 = "User Upload";
+                $stringURL22 = $CFG->wwwroot."/admin/tool/uploaduser/index.php";
+
+                $strlang23 = "Upload user pictures";
+                $stringURL23 = $CFG->wwwroot."/admin/tool/uploaduser/picture.php";
+
                 $CFG->custommenuitems .= "
                 $strlang2 | $stringURL2";  
+                $CFG->custommenuitems .= "
+                
+                - $strlang22 | $stringURL22";  
+                $CFG->custommenuitems .= "
+                - $strlang23 | $stringURL23";  
             }
 
 
@@ -132,12 +142,12 @@ class primary implements renderable, templatable {
             $stringURL2 = $CFG->wwwroot.'/grade/report/overview/index.php';
             $CFG->custommenuitems .= "
             $strlang2 | $stringURL2"; 
+            
 
 
         }
 
-
-
+        
         // Early return if a custom menu does not exists.
         if (empty($CFG->custommenuitems)) {
             return [];
